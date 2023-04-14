@@ -107,16 +107,20 @@ const Home = () => {
       </div>
       <div className="grid grid-rows-4 grid-cols-7 gap-2">
         {dayCalender.cal.map((val, index) => {
-          console.log(val);
+          // console.log(val);
           return (
             <div
               style={
                 val.date === 0
-                  ? { backgroundColor: "rgba(178, 178, 178,0.5)" }
-                  : val.eventDate.length === 0
-                  ? { backgroundColor: "rgba(178, 178, 178,0.1)" }
+                  ? { backgroundColor: "rgba(178, 178, 178,1)" }
+                  : val.eventDate.length != 0
+                  ? { backgroundColor: `rgba(${val.colorPrimary},0.9)` }
+                  : val.date >= today.getDate()
+                  ? {
+                      backgroundColor: "rgba(178, 178, 178,0.1)",
+                    }
                   : {
-                      backgroundColor: `rgba(${val.colorPrimary},0.9)`,
+                      backgroundColor: "rgba(178, 178, 178,0.5)",
                     }
               }
               className={`
@@ -127,6 +131,7 @@ const Home = () => {
               key={index}
               onClick={() => {
                 const today = new Date();
+
                 if (parseInt(val.date) >= parseInt(today.getDate())) {
                   setSelect({
                     ...select,
@@ -135,6 +140,8 @@ const Home = () => {
                     date: val.date,
                     color: `rgba(${val.colorPrimary},0.7)`,
                   });
+                } else {
+                  alert("can`t write events out of date");
                 }
               }}
             >

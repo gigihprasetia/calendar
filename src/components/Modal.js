@@ -8,6 +8,8 @@ import "react-clock/dist/Clock.css";
 const Modal = ({ select, setSelect, data, isSave, setIsSave }) => {
   const [value, onChange] = useState("10:00");
   const dataEvent = JSON.parse(localStorage.getItem("dataEvent"));
+  const [question, setQuestions] = useState(false);
+  const [save, setSave] = useState(false);
   const [input, setInput] = useState({
     isUpdate: "",
     name: "",
@@ -27,6 +29,11 @@ const Modal = ({ select, setSelect, data, isSave, setIsSave }) => {
     setEventTemp(filterSelect[0].eventDate);
   }, []);
 
+  function isValidEmail(email) {
+    const pattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return pattern.test(email);
+  }
+
   function handleSubmit() {
     // const dataEventTemp = [...dataEvent];
 
@@ -40,22 +47,40 @@ const Modal = ({ select, setSelect, data, isSave, setIsSave }) => {
 
     // filterSelect[0].eventDate.push(input);
 
-    if (eventTemp.length === 3) {
-      alert("max event 3 item");
+    if (
+      input.name === "" ||
+      input.time === "" ||
+      input.eventDescription === ""
+    ) {
+      alert("pastikan data kamu  tidak kosong");
     } else {
-      //   setEventTemp([...eventTemp, ...filterSelect[0].eventDate]);
-      setEventTemp([
-        ...eventTemp,
-        {
-          name: input.name,
-          time: input.time,
-          inviteEmail: input.inviteEmail,
-          eventDescription: input.eventDescription,
-        },
-      ]);
-    }
+      if (isValidEmail(input.inviteEmail)) {
+        if (eventTemp.length === 3) {
+          alert("max event 3 item");
+        } else {
+          setEventTemp([
+            ...eventTemp,
+            {
+              name: input.name,
+              time: input.time,
+              inviteEmail: input.inviteEmail,
+              eventDescription: input.eventDescription,
+            },
+          ]);
 
-    // console.log(input);
+          setInput({
+            isUpdate: "",
+            name: "",
+            time: "10:00",
+            inviteEmail: "",
+            eventDescription: "",
+          });
+          setSave(true);
+        }
+      } else {
+        alert("format email salah");
+      }
+    }
   }
 
   function handleSave() {
@@ -81,14 +106,9 @@ const Modal = ({ select, setSelect, data, isSave, setIsSave }) => {
 
     localStorage.setItem("dataEvent", JSON.stringify(filterNotSelect));
 
-    setSelect({
-      ...select,
-      activate: !select.activate,
-      id: null,
-      date: null,
-    });
-
     setIsSave(!isSave);
+    setSave(false);
+    alert("Succes Saving Data");
   }
 
   function HandleDelete(identity, id) {
@@ -97,6 +117,7 @@ const Modal = ({ select, setSelect, data, isSave, setIsSave }) => {
     });
 
     setEventTemp(deleteFilter);
+    setSave(true);
   }
 
   function HandleUpdate() {
@@ -119,6 +140,28 @@ const Modal = ({ select, setSelect, data, isSave, setIsSave }) => {
       inviteEmail: "",
       eventDescription: "",
     });
+    setSave(true);
+  }
+
+  function handleClose(phase) {
+    if (phase === "clickClose") {
+      setQuestions(true);
+    } else if (phase === "tidak") {
+      setSelect({
+        ...select,
+        activate: !select.activate,
+        id: null,
+        date: null,
+      });
+    } else {
+      handleSave();
+      setSelect({
+        ...select,
+        activate: !select.activate,
+        id: null,
+        date: null,
+      });
+    }
   }
 
   return (
@@ -133,7 +176,7 @@ const Modal = ({ select, setSelect, data, isSave, setIsSave }) => {
             Create Your Own Event In Date
             <br /> {data.date} {moment().format("MMMM  YYYY")}{" "}
           </p>
-          <div onClick={handleSave}>
+          <div onClick={() => handleClose("clickClose")}>
             <AiFillCloseCircle color="red" size={30} />
           </div>
         </div>
@@ -209,7 +252,22 @@ const Modal = ({ select, setSelect, data, isSave, setIsSave }) => {
                 Update List
               </button>
             )}
-            <button className="bg-red-500 px-2 py-1 rounded-sm ">Cencel</button>
+            {input.isUpdate !== "" ? (
+              <button
+                onClick={() =>
+                  setInput({
+                    isUpdate: "",
+                    name: "",
+                    time: "10:00",
+                    inviteEmail: "",
+                    eventDescription: "",
+                  })
+                }
+                className="bg-red-500 px-2 py-1 rounded-sm "
+              >
+                Cencel
+              </button>
+            ) : null}
           </div>
         </div>
         <div className="w-full  ">
@@ -262,13 +320,47 @@ const Modal = ({ select, setSelect, data, isSave, setIsSave }) => {
           })}
         </div>
 
-        <button
-          onClick={handleSave}
-          className="bg-green-900 text-white px-2 py-1 rounded-sm mt-10"
-        >
-          Save
-        </button>
+        {save ? (
+          <div className="fixed w-full flex justify-center left-0 bottom-5">
+            <button
+              onClick={handleSave}
+              className="bg-green-900 text-white px-2 py-1 rounded-sm w-96 "
+            >
+              Save
+            </button>
+          </div>
+        ) : null}
       </div>
+
+      {/* Toogle Modal Close */}
+      {question ? (
+        <div
+          style={{
+            backgroundColor: "rgba(0,0,0,0.5)",
+          }}
+          className="absolute z-20 top-0 left-0 w-full flex justify-center items-center h-screen"
+        >
+          <div className="bg-white p-5 rounded-md flex flex-col items-center">
+            <p className="font-bold text-blue-700">
+              Weitss Sebelum Keluar Apakah Ingin Menyimpan Perubahan Terakhir ?
+            </p>
+            <div className="flex justify-evenly w-full">
+              <button
+                onClick={() => handleClose("ya")}
+                className="bg-green-600 text-white px-2 py-1 rounded-sm mt-10"
+              >
+                Ya
+              </button>
+              <button
+                onClick={() => handleClose("tidak")}
+                className="bg-red-600 text-white px-2 py-1 rounded-sm mt-10"
+              >
+                Tidak
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 };
